@@ -1,27 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:shop/data/dummy_data.dart';
-import 'package:shop/models/product.dart';
-import 'package:shop/widgets/product_item.dart';
 
-class ProductOverviewScreen extends StatelessWidget {
-  final List<Product> loadedProducts = DUMMY_PRODUCTS;
+import 'package:shop/widgets/product_grid.dart';
+
+enum FilterOptions {
+  Favorite,
+  All,
+}
+
+class ProductOverviewScreen extends StatefulWidget {
+  @override
+  _ProductOverviewScreenState createState() => _ProductOverviewScreenState();
+}
+
+class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
+  bool _showFavoriteOnly = false;
+
   @override
   Widget build(BuildContext context) {
+    _selectOption(FilterOptions value) {
+      setState(() {
+        if (value == FilterOptions.All)
+          _showFavoriteOnly = false;
+        else
+          _showFavoriteOnly = true;
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          PopupMenuButton(
+            onSelected: (FilterOptions value) => _selectOption(value),
+            icon: Icon(Icons.more_vert),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                child: Text('Somente favoritos'),
+                value: FilterOptions.Favorite,
+              ),
+              PopupMenuItem(
+                child: Text('Todos'),
+                value: FilterOptions.All,
+              ),
+            ],
+          )
+        ],
         title: Text('Minha Loja'),
       ),
-      body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 3 / 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
-        padding: const EdgeInsets.all(10),
-        itemCount: loadedProducts.length,
-        itemBuilder: (context, index) => ProdutcItem(loadedProducts[index]),
-      ),
+      body: ProductGrid(_showFavoriteOnly),
     );
   }
 }
