@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:shop/data/dummy_data.dart';
 import 'package:shop/providers/product.dart';
@@ -13,9 +15,41 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  void addProduct(Product product) {
-    _items.add(product);
+  void addProduct(Product newProduct) {
+    _items.add(
+      Product(
+        id: Random().nextDouble().toString(),
+        description: newProduct.description,
+        imageUrl: newProduct.imageUrl,
+        price: newProduct.price,
+        title: newProduct.title,
+      ),
+    );
     notifyListeners();
+  }
+
+  void removeProduct(String id) {
+    final index = _items.indexWhere((prod) => prod.id == id);
+    if (index >= 0) {
+      _items.removeWhere((prod) => prod.id == id);
+      notifyListeners();
+    }
+  }
+
+  void updateProduct(Product product) {
+    if (product == null || product.id == null) {
+      return;
+    }
+    final index = _items.indexWhere((element) => element.id == product.id);
+    if (index >= 0) {
+      _items[index] = product;
+      notifyListeners();
+    }
+  }
+
+  //Usa esse metodo para não ficar clonando a lista toda hora
+  int get itemsCount {
+    return _items.length;
   }
 
   //O que está comentado era para filtrar globalmente os produtos favoritos na aplicação

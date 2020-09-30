@@ -32,4 +32,20 @@ final DUMMY_PRODUCTS = [
     imageUrl:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
   ),
+  Product(
+    id: 'p5',
+    title: 'BasketBall',
+    description: 'Ball.',
+    price: 123.99,
+    imageUrl:
+        'https://res-3.cloudinary.com/russell-corp-australia-pty-ltd/image/upload/c_limit,dpr_2.0,f_auto,h_950,q_auto,w_950/media/catalog/product/c/d/cdc6wtiplwx5f422ik3u.jpg',
+  ),
+  Product(
+    id: 'p6',
+    title: 'Shoes',
+    description: 'The best shoes ever.',
+    price: 399.99,
+    imageUrl:
+        'https://image.cnbcfm.com/api/v1/image/105680013-1547583426762nike1.jpg?v=1547583682',
+  ),
 ];

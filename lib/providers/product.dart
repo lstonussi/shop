@@ -10,7 +10,7 @@ class Product extends ChangeNotifier {
   bool isFavorite;
 
   Product({
-    @required this.id,
+    this.id,
     @required this.title,
     @required this.description,
     @required this.price,

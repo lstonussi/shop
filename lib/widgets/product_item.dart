@@ -1,48 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop/providers/product.dart';
+import 'package:shop/providers/products.dart';
 import 'package:shop/utils/routes_app.dart';
 
-class ProdutcItem extends StatelessWidget {
+class ProductItem extends StatelessWidget {
+  final Product product;
+
+  const ProductItem({this.product});
+
   @override
   Widget build(BuildContext context) {
-    final Product product = Provider.of<Product>(context, listen: false);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: GridTile(
-        child: GestureDetector(
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
-          ),
-          onTap: () {
-            Navigator.of(context).pushNamed(
-              RoutesApp.PRODUCT_DETAIL,
-              arguments: product,
-            );
-          },
-        ),
-        footer: GridTileBar(
-          backgroundColor: Colors.black87,
-          leading: Consumer<Product>(
-            builder: (ctx, product, _) => IconButton(
-              icon: Icon(
-                  product.isFavorite ? Icons.favorite : Icons.favorite_border),
-              color: Theme.of(context).accentColor,
+    Future<bool> _showDialog() async {
+      return showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Tem certeza?'),
+          content: Text('Deseja remover o produto ${product.title}?'),
+          actions: [
+            FlatButton(
+              child: Text('Não'),
               onPressed: () {
-                product.toggleFavorite();
+                Navigator.of(ctx).pop(false);
               },
             ),
-          ),
-          title: Text(
-            product.title,
-            textAlign: TextAlign.center,
-          ),
-          trailing: IconButton(
-            icon: Icon(Icons.shopping_cart),
-            color: Theme.of(context).accentColor,
-            onPressed: () {},
-          ),
+            FlatButton(
+              child: Text('Sim'),
+              onPressed: () {
+                Navigator.of(ctx).pop(true);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: NetworkImage(product.imageUrl),
+      ),
+      title: Text(product.title),
+      trailing: Container(
+        width: 100,
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(
+                Icons.edit,
+                color: Theme.of(context).primaryColor,
+              ),
+              onPressed: () {
+                Navigator.of(context).pushNamed(
+                  RoutesApp.PRODUCTFORM,
+                  arguments: product,
+                );
+              },
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.delete,
+                color: Theme.of(context).errorColor,
+              ),
+              onPressed: () {
+                final products = Provider.of<Products>(context, listen: false);
+                _showDialog().then((value) {
+                  if (value) products.removeProduct(product.id);
+                });
+              },
+            ),
+          ],
         ),
       ),
     );
