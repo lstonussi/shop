@@ -1,12 +1,11 @@
-import 'dart:math';
-
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
-import 'package:shop/data/dummy_data.dart';
+import 'package:http/http.dart' as http;
 import 'package:shop/providers/product.dart';
 
 class Products with ChangeNotifier {
-  List<Product> _items = DUMMY_PRODUCTS;
-
+  List<Product> _items = [];
+  final String _baseUrl = 'https://flutter-cod3r-b0224.firebaseio.com/products';
   //Como o spread adicionar uma lista em outra lista gerando outra lista os dados de _item ficarão
   //inalterados. É uma boa pratica pois preserva os dados originais, para alterar os valores originais
   //deve ser feito através da classe products
@@ -15,10 +14,45 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  void addProduct(Product newProduct) {
+  Future<void> loadProducts() async {
+    final response = await http.get('$_baseUrl.json');
+
+    Map<String, dynamic> dados = json.decode(response.body);
+
+    _items.clear(); //Limpa a lista antes de adicionar para não duplicar
+
+    if (dados != null) {
+      dados.forEach((id, product) {
+        _items.add(
+          Product(
+            id: id,
+            description: product['description'],
+            imageUrl: product['imageUrl'],
+            price: product['price'],
+            title: product['title'],
+            isFavorite: product['isFavorite'],
+          ),
+        );
+      });
+    }
+    notifyListeners();
+  }
+
+  Future addProduct(Product newProduct) async {
+    final response = await http.post(
+      '$_baseUrl.json',
+      body: jsonEncode({
+        'title': newProduct.title,
+        'description': newProduct.description,
+        'imageUrl': newProduct.imageUrl,
+        'isFavorite': newProduct.isFavorite,
+        'price': newProduct.price,
+      }),
+    );
+
     _items.add(
       Product(
-        id: Random().nextDouble().toString(),
+        id: json.decode(response.body)['name'],
         description: newProduct.description,
         imageUrl: newProduct.imageUrl,
         price: newProduct.price,
@@ -36,12 +70,21 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(Product product) {
+  Future<void> updateProduct(Product product) async {
     if (product == null || product.id == null) {
       return;
     }
     final index = _items.indexWhere((element) => element.id == product.id);
     if (index >= 0) {
+      await http.patch(
+        '$_baseUrl/${product.id}.json',
+        body: jsonEncode({
+          'title': product.title,
+          'description': product.description,
+          'imageUrl': product.imageUrl,
+          'price': product.price,
+        }),
+      );
       _items[index] = product;
       notifyListeners();
     }
