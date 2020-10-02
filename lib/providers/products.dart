@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:shop/exceptions/http_exception.dart';
 import 'package:shop/providers/product.dart';
+import 'package:shop/utils/constants.dart';
 
 class Products with ChangeNotifier {
   List<Product> _items = [];
-  final String _baseUrl = 'https://flutter-cod3r-b0224.firebaseio.com/products';
+  static const String _baseUrl = '${Constants.BASE_API_URL}/products';
   //Como o spread adicionar uma lista em outra lista gerando outra lista os dados de _item ficarão
   //inalterados. É uma boa pratica pois preserva os dados originais, para alterar os valores originais
   //deve ser feito através da classe products
@@ -62,11 +64,25 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  void removeProduct(String id) {
+  Future<void> removeProduct(String id) async {
     final index = _items.indexWhere((prod) => prod.id == id);
     if (index >= 0) {
-      _items.removeWhere((prod) => prod.id == id);
+      final product = _items[index];
+
+      //Exclusão otimista (mais rapido), excluir do app para dps excluir no servidor,
+      //caso de algum erro, o item é incluido novamente
+      _items.remove(product);
       notifyListeners();
+
+      final response = await http.delete('$_baseUrl/${product.id}.json');
+      if (response.statusCode >= 400) {
+        _items.insert(index, product);
+        notifyListeners();
+        throw HttpException('Ocorreu um erro na exclusão do produto');
+      } else {
+        _items.remove(product);
+        notifyListeners();
+      }
     }
   }
 

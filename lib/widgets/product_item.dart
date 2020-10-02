@@ -11,6 +11,7 @@ class ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = Scaffold.of(context);
     Future<bool> _showDialog() async {
       return showDialog(
         context: context,
@@ -63,9 +64,23 @@ class ProductItem extends StatelessWidget {
               ),
               onPressed: () {
                 final products = Provider.of<Products>(context, listen: false);
-                _showDialog().then((value) {
-                  if (value) products.removeProduct(product.id);
-                });
+                _showDialog().then(
+                  (value) async {
+                    if (value) {
+                      try {
+                        await products.removeProduct(product.id);
+                      } catch (e) {
+                        scaffold.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              e.toString(),
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                );
               },
             ),
           ],
