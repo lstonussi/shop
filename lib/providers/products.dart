@@ -6,8 +6,13 @@ import 'package:shop/providers/product.dart';
 import 'package:shop/utils/constants.dart';
 
 class Products with ChangeNotifier {
-  List<Product> _items = [];
   static const String _baseUrl = '${Constants.BASE_API_URL}/products';
+  List<Product> _items = [];
+  String _token;
+  String _userId;
+
+  Products([this._token, this._userId, this._items = const []]);
+
   //Como o spread adicionar uma lista em outra lista gerando outra lista os dados de _item ficarão
   //inalterados. É uma boa pratica pois preserva os dados originais, para alterar os valores originais
   //deve ser feito através da classe products
@@ -17,10 +22,13 @@ class Products with ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
-    final response = await http.get('$_baseUrl.json');
+    final response = await http.get('$_baseUrl.json?auth=$_token');
+    final favResponse = await http.get(
+        '${Constants.BASE_API_URL}/userFavorites/$_userId.json?auth=$_token');
 
     Map<String, dynamic> dados = json.decode(response.body);
-
+    Map<String, dynamic> favMap =
+        favResponse.body != null ? json.decode(favResponse.body) : null;
     _items.clear(); //Limpa a lista antes de adicionar para não duplicar
 
     if (dados != null) {
@@ -32,7 +40,8 @@ class Products with ChangeNotifier {
             imageUrl: product['imageUrl'],
             price: product['price'],
             title: product['title'],
-            isFavorite: product['isFavorite'],
+            //se o mao for nulo, é false. Caso não seja e o id não exista é falso.(retorno padrao)
+            isFavorite: favMap == null ? false : favMap[id] ?? false,
           ),
         );
       });
@@ -42,12 +51,11 @@ class Products with ChangeNotifier {
 
   Future addProduct(Product newProduct) async {
     final response = await http.post(
-      '$_baseUrl.json',
+      '$_baseUrl.json?auth=$_token',
       body: jsonEncode({
         'title': newProduct.title,
         'description': newProduct.description,
         'imageUrl': newProduct.imageUrl,
-        'isFavorite': newProduct.isFavorite,
         'price': newProduct.price,
       }),
     );
@@ -74,7 +82,8 @@ class Products with ChangeNotifier {
       _items.remove(product);
       notifyListeners();
 
-      final response = await http.delete('$_baseUrl/${product.id}.json');
+      final response =
+          await http.delete('$_baseUrl/${product.id}.json?auth=$_token');
       if (response.statusCode >= 400) {
         _items.insert(index, product);
         notifyListeners();
@@ -93,7 +102,7 @@ class Products with ChangeNotifier {
     final index = _items.indexWhere((element) => element.id == product.id);
     if (index >= 0) {
       await http.patch(
-        '$_baseUrl/${product.id}.json',
+        '$_baseUrl/${product.id}.json?auth=$_token',
         body: jsonEncode({
           'title': product.title,
           'description': product.description,

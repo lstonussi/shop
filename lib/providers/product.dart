@@ -13,8 +13,9 @@ class Product extends ChangeNotifier {
 
   bool isFavorite;
   bool isInCart = false;
+
   //Boa pratica usar um arquivo de constantes
-  static const String _baseUrl = '${Constants.BASE_API_URL}/products';
+  static const String _baseUrl = '${Constants.BASE_API_URL}';
   Product({
     this.id,
     @required this.title,
@@ -29,14 +30,12 @@ class Product extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleFavorite() async {
+  Future<void> toggleFavorite(String token, String userId) async {
     _toggleFavorite();
     try {
-      final response = await http.patch(
-        '$_baseUrl/$id.json',
-        body: jsonEncode({
-          'isFavorite': isFavorite,
-        }),
+      final response = await http.put(
+        '$_baseUrl/userFavorites/$userId/$id.json?auth=$token',
+        body: jsonEncode(isFavorite),
       );
       //Caso de erro volta como estava
       if (response.statusCode >= 400) {
@@ -44,6 +43,7 @@ class Product extends ChangeNotifier {
       }
       //Caso de qualer erro volta como estava
     } catch (e) {
+      print(e);
       _toggleFavorite();
     }
   }
